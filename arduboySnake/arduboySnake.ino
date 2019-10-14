@@ -1,5 +1,6 @@
  /**********************************
  SNAKE
+ Version 1.0
  Copyright (C) 2019 James STevick
  All rights reserved.
  **********************************/
