@@ -1,5 +1,6 @@
  /**********************************
  SNAKE
+ Version 1.0
  Copyright (C) 2019 James STevick
  All rights reserved.
  **********************************/
@@ -15,13 +16,13 @@ Initiate Variables
 Arduboy2 arduboy;
 BeepPin1 beep;
 
-const unsigned int FRAME_RATE = 30;  // Frames per second
+const unsigned int FRAME_RATE = 10;  // Frames per second
 int dx = 1;       // Initial movement of snake
-byte snakex[30]; // Snakehead starting position
-byte snakey[30]; // Snakehead starting position
+byte snakex[500]; // Snakehead starting position
+byte snakey[500]; // Snakehead starting position
 int dirSnake = 1; // 0-Up, 1-Right, 2-Down, 3-Left
-int xa = random(1,128);        // Apple starting position
-int ya = random(1,64);         // Apple starting position
+int xa;           // Apple starting position
+int ya;           // Apple starting position
 boolean released = false;       // Is game in motion
 boolean paused = false;         // Is game paused
 boolean crashed = false;
@@ -75,7 +76,9 @@ void loop()
     score = 0;
     snakeLength = 10; 
     dirSnake = 1;
-
+    xa = random(5,123);
+    ya = random(5,59);
+    
     newGame();
     
     crashed = false;
@@ -95,7 +98,9 @@ void loop()
     oldpad = pad;
 
     drawSnake();
-    drawApple();
+    if(released){
+      drawApple();
+    }
   }
   else
   {
@@ -120,8 +125,8 @@ void moveApple()
     boolean appleMoved = false;
     while(!appleMoved){
       appleMoved = true;
-      xa = random(1,128);
-      ya = random(1,64);
+      xa = random(3,125);
+      ya = random(3,61);
       for (byte snakeBodyX = 0; snakeBodyX < snakeLength; snakeBodyX++){
         if (xa == snakex[snakeBodyX]){
           for (byte snakeBodyY = 0; snakeBodyY < snakeLength; snakeBodyY++){
@@ -133,8 +138,8 @@ void moveApple()
           }
         }
       }
-      snakeGrow = false;
     }
+    snakeGrow = false;
   }
 }
 
@@ -173,7 +178,7 @@ void moveSnake()
 
   if(released)
   {
-    // Did Snake crash
+    // Did Snake crash into the wall
     if (snakex[0] == 0 || snakex[0] == 127 || snakey[0] == 0 || snakey[0] == 63)
     {
       crashed = true;
@@ -181,6 +186,21 @@ void moveSnake()
       return;
     }
 
+    // Did snake crash into itself
+   for (byte snakeBodyX = 0; snakeBodyX < snakeLength; snakeBodyX++){
+     for (byte snakeBodyX2 = 0; snakeBodyX2 < snakeLength; snakeBodyX2++){
+        if (snakeBodyX != snakeBodyX2){
+          if (snakex[snakeBodyX]==snakex[snakeBodyX2]){
+            if (snakey[snakeBodyX]==snakey[snakeBodyX2]){
+              crashed = true;
+              playToneTimed(175, 500);
+              return;
+            }
+          }
+        }
+      }
+    }
+      
     // Did Snake eat an apple
     if (xa == snakex[0] && ya == snakey[0])
     {
