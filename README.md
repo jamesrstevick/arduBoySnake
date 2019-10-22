@@ -1,5 +1,5 @@
 # arduBoySnake
-Classic game snake written on for Arduboy
+Classic game snake written for Arduboy
 
 ## Installation
 1. Download the following arduino libraries 
