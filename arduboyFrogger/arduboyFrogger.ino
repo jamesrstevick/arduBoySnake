@@ -9,7 +9,6 @@ All rights reserved.
 
 // High Scores saved in EEPROM
 #define EE_FILE 2
-
 /**********************************
 Initiate Variables
 ***********************************/
@@ -17,7 +16,7 @@ Arduboy2 arduboy;
 BeepPin1 beep;
 
 // Relevant to all games
-const unsigned int FRAME_RATE = 15;  // Frames per second
+const unsigned int FRAME_RATE = 10;  // Frames per second
 boolean pad, pad2, pad3;             //Button press buffer used to stop pause repeating
 boolean oldpad, oldpad2, oldpad3;
 char initials[3];                    // Initials used in high score
@@ -25,24 +24,36 @@ char text_buffer[16];           //General string buffer
 boolean menu = true;            // Is menu displayed
 boolean initialDraw = false;    // Is initial state of game drawn
 
-int dx = 1;       // Initial movement of snake
-byte snakex[500]; // Snakehead starting position
-byte snakey[500]; // Snakehead starting position
-int dirSnake = 1; // 0-Up, 1-Right, 2-Down, 3-Left
-int xa;           // Apple starting position
-int ya;           // Apple starting position
-boolean released = false;       // Is game in motion
-boolean paused = false;         // Is game paused
-boolean crashed = false;
-boolean snakeGrow = false;       // Did snake just eat an apple
+byte fyPos = 0;
+byte fyposArr[6] = {60, 49, 40, 31, 22, 13};
+byte fx = 124;
+byte fy = fyposArr[fyPos];
+
+int log1a[5] = {0, 35, 70, 105, 140};
+int log2a[4] = {-48, 0, 48, 94};
+int log3a[3] = {-70, 0, 70};
+int log4a[4] = {-5, 30, 65, 100};
+int log5a[4] = {-55, 0, 55, 110};
+
+// int dx = 1;       // Initial movement of snake
+// byte snakex[500]; // Snakehead starting position
+// byte snakey[500]; // Snakehead starting position
+// int dirSnake = 1; // 0-Up, 1-Right, 2-Down, 3-Left
+// int xa;           // Apple starting position
+// int ya;           // Apple starting position
+// int yp;
+ boolean released = false;       // Is game in motion
+ boolean paused = false;         // Is game paused
+// boolean crashed = false;
+// boolean snakeGrow = false;       // Did snake just eat an apple
 unsigned int score = 0;         // Game score
-unsigned int snakeLength = 10;  // Length of snake
+// unsigned int snakeLength = 10;  // Length of snake
 
 
 
 
 
-//Ball Bounds used in collision detection
+// Ball Bounds used in collision detection
 // byte leftBorder;
 // byte rightBorder;
 // byte topBorder;
@@ -54,6 +65,7 @@ void setup()
   beep.begin();
   arduboy.setFrameRate(FRAME_RATE); // Sets the frame rate
   arduboy.initRandomSeed();  // Initiates random generator
+  Serial.begin(9600);
 }
 
 void loop()
@@ -80,196 +92,171 @@ void loop()
   if (!initialDraw)
   {
     score = 0;
-    snakeLength = 10; 
-    dirSnake = 1;
-    xa = 2+random(1,41)*3;
-    ya = 3+random(1,19)*3;
+//    snakeLength = 10; 
+//    dirSnake = 1;
+//    xa = 2+random(1,41)*3;
+//    ya = 3+random(1,19)*3;
     
     newGame();
     
-    crashed = false;
+//    crashed = false;
     initialDraw=true;
   }
 
-  // If the snake has not crashed
-  if (!crashed)
-  {
-    //Pause game if FIRE pressed
-    pad = arduboy.pressed(A_BUTTON) || arduboy.pressed(B_BUTTON);
-    if(pad == true && oldpad == false && released)
-    {
-      oldpad2 = false; // Use pad 2 in paused
-      pause();
-    }
-    oldpad = pad;
+  drawFrogger();
 
-    if(released){
-      drawApple();
-    }
-    drawSnake();
-  }
-  else
-  {
-    drawGameOver();
-    if (score > 0)
-    {
-      enterHighScore(EE_FILE);
-    }
+  // // If the snake has not crashed
+  // if (!crashed)
+  // {
+  //   //Pause game if FIRE pressed
+  //   pad = arduboy.pressed(A_BUTTON) || arduboy.pressed(B_BUTTON);
+  //   if(pad == true && oldpad == false && released)
+  //   {
+  //     oldpad2 = false; // Use pad 2 in paused
+  //     pause();
+  //   }
+  //   oldpad = pad;
 
-    arduboy.clear();
-    released = false;
-    initialDraw = false;
-    menu = true;
-  }
+  //   if(released){
+  //     drawApple();
+  //   }
+  //   drawSnake();
+  // }
+  // else
+  // {
+  //   drawGameOver();
+  //   if (score > 0)
+  //   {
+  //     enterHighScore(EE_FILE);
+  //   }
+
+  //   arduboy.clear();
+  //   released = false;
+  //   initialDraw = false;
+  //   menu = true;
+  // }
 
   arduboy.display();
 }
 
-void moveApple()
-{
-  if (snakeGrow){
-    boolean appleMoved = false;
-    while(!appleMoved){
-      appleMoved = true;
-      xa = 2+random(1,41)*3;
-      ya = 3+random(1,19)*3;
-      for (byte snakeBodyX = 0; snakeBodyX < snakeLength; snakeBodyX++){
-        if (abs(xa - snakex[snakeBodyX]) <=2 ){
-          for (byte snakeBodyY = 0; snakeBodyY < snakeLength; snakeBodyY++){
-            if (abs(ya - snakey[snakeBodyY]) <=2 ){
-              appleMoved = false;
-              break;
-              break;
-            }
-          }
-        }
-      }
-    }
-    snakeGrow = false;
-  }
-}
+//void moveApple()
+//{
+//  if (snakeGrow){
+//    boolean appleMoved = false;
+//    while(!appleMoved){
+//      appleMoved = true;
+//      xa = 2+random(1,41)*3;
+//      ya = 3+random(1,19)*3;
+//      for (byte snakeBodyX = 0; snakeBodyX < snakeLength; snakeBodyX++){
+//        if (abs(xa - snakex[snakeBodyX]) <=2 ){
+//          for (byte snakeBodyY = 0; snakeBodyY < snakeLength; snakeBodyY++){
+//            if (abs(ya - snakey[snakeBodyY]) <=2 ){
+//              appleMoved = false;
+//              break;
+//              break;
+//            }
+//          }
+//        }
+//      }
+//    }
+//    snakeGrow = false;
+//  }
+//}
 
 void newGame(){
   arduboy.clear();  // Clear display
-  drawSnake();   // Draw snake
-  arduboy.drawRect(0, 0, 128, 64, 1); // Draw border
-  arduboy.drawRect(0, 1, 128, 62, 1);
+  drawBackground();   // Draw snake
   arduboy.display(); // Diplay
 }
 
-void moveSnake()
-{
-  // Initial Snake position
-  if (!initialDraw){
-    snakex[0] = 47;
-    snakey[0] = 30;
-    snakex[1] = 44;
-    snakey[1] = 30;
-    snakex[2] = 41;
-    snakey[2] = 30;
-    snakex[3] = 38;
-    snakey[3] = 30;
-    snakex[4] = 35;
-    snakey[4] = 30;
-    snakex[5] = 32;
-    snakey[5] = 30;
-    snakex[6] = 29;
-    snakey[6] = 30;
-    snakex[7] = 26;
-    snakey[7] = 30;
-    snakex[8] = 23;
-    snakey[8] = 30;
-    snakex[9] = 20;
-    snakey[9] = 30;
-  }
+void drawBackground(){
+  arduboy.fillRect(0,0,4,8,1);
+  arduboy.fillRect(15,0,16,8,1);
+  arduboy.fillRect(42,0,16,8,1);
+  arduboy.fillRect(69,0,16,8,1);
+  arduboy.fillRect(96,0,17,8,1);
+  arduboy.fillRect(124,0,4,8,1);
+  arduboy.fillRect(0,55,128,1,1);
+}
 
+
+void moveFrogger()
+{
   if(released)
   {
     // Did Snake crash into the wall
-    if (snakex[0] <= 1 || snakex[0] >= 126 || snakey[0] <= 2 || snakey[0] >= 61)
-    {
-      crashed = true;
-      playToneTimed(175, 500);
-      return;
-    }
+    // if (snakex[0] <= 1 || snakex[0] >= 126 || snakey[0] <= 2 || snakey[0] >= 61)
+    // {
+    //   crashed = true;
+    //   playToneTimed(175, 500);
+    //   return;
+    // }
 
     // Did snake crash into itself
-   for (byte snakeBodyX = 0; snakeBodyX < snakeLength; snakeBodyX++){
-     for (byte snakeBodyX2 = 0; snakeBodyX2 < snakeLength; snakeBodyX2++){
-        if (snakeBodyX != snakeBodyX2){
-          if (snakex[snakeBodyX]==snakex[snakeBodyX2]){
-            if (snakey[snakeBodyX]==snakey[snakeBodyX2]){
-              crashed = true;
-              playToneTimed(175, 500);
-              return;
-            }
-          }
-        }
-      }
-    }
+  //  for (byte snakeBodyX = 0; snakeBodyX < snakeLength; snakeBodyX++){
+  //    for (byte snakeBodyX2 = 0; snakeBodyX2 < snakeLength; snakeBodyX2++){
+  //       if (snakeBodyX != snakeBodyX2){
+  //         if (snakex[snakeBodyX]==snakex[snakeBodyX2]){
+  //           if (snakey[snakeBodyX]==snakey[snakeBodyX2]){
+  //             crashed = true;
+  //             playToneTimed(175, 500);
+  //             return;
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
       
     // Did Snake eat an apple
-    if (abs(xa - snakex[0])<=2 && abs(ya - snakey[0])<=2)
-    {
-      snakeGrow = true;
-      score ++ ;
-      playTone(523, 250);
-    }
+    // if (abs(xa - snakex[0])<=2 && abs(ya - snakey[0])<=2)
+    // {
+    //   snakeGrow = true;
+    //   score ++ ;
+    //   playTone(523, 250);
+    // }
 
     // Extend snake
-    if (snakeGrow){
-      snakex[snakeLength] = snakex[snakeLength - 1];
-      snakey[snakeLength] = snakey[snakeLength - 1];
-    }
+    // if (snakeGrow){
+    //   snakex[snakeLength] = snakex[snakeLength - 1];
+    //   snakey[snakeLength] = snakey[snakeLength - 1];
+    // }
 
-    // Move the snake body
-    for (byte snakeBody = snakeLength - 1; snakeBody > 0 ; snakeBody--){
-      snakex[snakeBody] = snakex[snakeBody - 1];
-      snakey[snakeBody] = snakey[snakeBody - 1];
-    }
+    // // Move the snake body
+    // for (byte snakeBody = snakeLength - 1; snakeBody > 0 ; snakeBody--){
+    //   snakex[snakeBody] = snakex[snakeBody - 1];
+    //   snakey[snakeBody] = snakey[snakeBody - 1];
+    // }
 
-    // Move the snake head
-    boolean moveAhead = true;
+    // Move Frogger
     if (arduboy.pressed(UP_BUTTON)){
-      if (dirSnake != 2){
-        snakey[0] -= 3;
-        dirSnake = 0;
-        moveAhead = false;
+      if (fyPos < 5){
+        fyPos += 1;
       }
+      fy = fyposArr[fyPos];
+      delay(50);
     } else if (arduboy.pressed(RIGHT_BUTTON)){
-      if (dirSnake != 3){
-        snakex[0] += 3;
-        dirSnake = 1;
-        moveAhead = false;
+      fx += 5;
+      if (fx > 124){
+        fx = 124;
       }
+      delay(50);
     } else if (arduboy.pressed(DOWN_BUTTON)){
-      if (dirSnake != 0){
-        snakey[0] += 3;
-        dirSnake = 2;
-        moveAhead = false;
+      if (fyPos > 0){
+        fyPos -= 1;
       }
+      fy = fyposArr[fyPos];
+      delay(50);
     } else if (arduboy.pressed(LEFT_BUTTON)){
-      if (dirSnake != 1){
-        snakex[0] -= 3;
-        dirSnake = 3;
-        moveAhead = false;
+      fx -= 5;
+      if (fx < 3){
+        fx = 3;
       }
+      delay(50);
     } 
-    if (moveAhead){
-      if (dirSnake==0){
-        snakey[0] -= 3;
-      } else if (dirSnake==1){
-        snakex[0] += 3;
-      } else if (dirSnake==2){
-        snakey[0] += 3;
-      } else if (dirSnake==3){
-        snakex[0] -= 3;
-      }
-    }
 
-    if(snakeGrow){
-        snakeLength ++ ; 
-    }
+    // if(snakeGrow){
+    //     snakeLength ++ ; 
+    // }
 
   }
   else
@@ -284,40 +271,140 @@ void moveSnake()
   }
 }
 
-void drawApple()
+void drawLogs()
 {
-  arduboy.fillRect(xa-1, ya-1, 3, 3, 0);
-  moveApple();
-  arduboy.fillRect(xa-1, ya-1, 3, 3, 1);
+  arduboy.drawRect(log1a[0], fyposArr[1]-3, 23, 7, 0);
+  arduboy.drawRect(log1a[1], fyposArr[1]-3, 23, 7, 0);
+  arduboy.drawRect(log1a[2], fyposArr[1]-3, 23, 7, 0);
+  arduboy.drawRect(log1a[3], fyposArr[1]-3, 23, 7, 0);
+  arduboy.drawRect(log1a[4], fyposArr[1]-3, 23, 7, 0);
+
+  arduboy.drawRect(log2a[0], fyposArr[2]-3, 23, 7, 0);
+  arduboy.drawRect(log2a[1], fyposArr[2]-3, 23, 7, 0);
+  arduboy.drawRect(log2a[2], fyposArr[2]-3, 23, 7, 0);
+  arduboy.drawRect(log2a[3], fyposArr[2]-3, 23, 7, 0);
+
+  arduboy.drawRect(log3a[0], fyposArr[3]-3, 50, 7, 0);
+  arduboy.drawRect(log3a[1], fyposArr[3]-3, 50, 7, 0);
+  arduboy.drawRect(log3a[2], fyposArr[3]-3, 50, 7, 0);
+
+  arduboy.drawRect(log4a[0], fyposArr[4]-3, 15, 7, 0);
+  arduboy.drawRect(log4a[1], fyposArr[4]-3, 15, 7, 0);
+  arduboy.drawRect(log4a[2], fyposArr[4]-3, 15, 7, 0);
+  arduboy.drawRect(log4a[3], fyposArr[4]-3, 15, 7, 0);
+
+  arduboy.drawRect(log5a[0], fyposArr[5]-3, 35, 7, 0);
+  arduboy.drawRect(log5a[1], fyposArr[5]-3, 35, 7, 0);
+  arduboy.drawRect(log5a[2], fyposArr[5]-3, 35, 7, 0);
+  arduboy.drawRect(log5a[3], fyposArr[5]-3, 35, 7, 0);
+
+  moveLogs();
+
+  arduboy.drawRect(log5a[0], fyposArr[5]-3, 35, 7, 1);
+  arduboy.drawRect(log5a[1], fyposArr[5]-3, 35, 7, 1);
+  arduboy.drawRect(log5a[2], fyposArr[5]-3, 35, 7, 1);
+  arduboy.drawRect(log5a[3], fyposArr[5]-3, 35, 7, 1);
+
+  arduboy.drawRect(log4a[0], fyposArr[4]-3, 15, 7, 1);
+  arduboy.drawRect(log4a[1], fyposArr[4]-3, 15, 7, 1);
+  arduboy.drawRect(log4a[2], fyposArr[4]-3, 15, 7, 1);
+  arduboy.drawRect(log4a[3], fyposArr[4]-3, 15, 7, 1);
+
+  arduboy.drawRect(log3a[0], fyposArr[3]-3, 50, 7, 1);
+  arduboy.drawRect(log3a[1], fyposArr[3]-3, 50, 7, 1);
+  arduboy.drawRect(log3a[2], fyposArr[3]-3, 50, 7, 1);
+
+  arduboy.drawRect(log2a[0], fyposArr[2]-3, 23, 7, 1);
+  arduboy.drawRect(log2a[1], fyposArr[2]-3, 23, 7, 1);
+  arduboy.drawRect(log2a[2], fyposArr[2]-3, 23, 7, 1);
+  arduboy.drawRect(log2a[3], fyposArr[2]-3, 23, 7, 1);
+
+  arduboy.drawRect(log1a[0], fyposArr[1]-3, 23, 7, 1);
+  arduboy.drawRect(log1a[1], fyposArr[1]-3, 23, 7, 1);
+  arduboy.drawRect(log1a[2], fyposArr[1]-3, 23, 7, 1);
+  arduboy.drawRect(log1a[3], fyposArr[1]-3, 23, 7, 1);
+  arduboy.drawRect(log1a[4], fyposArr[1]-3, 23, 7, 1);
 }
 
-void drawSnake()
-{
-  for (byte snakeBody = 0; snakeBody < snakeLength; snakeBody++){
-    arduboy.fillRect(snakex[snakeBody]-1, snakey[snakeBody]-1, 3, 3, 0);
+void moveLogs(){
+  for (int index = 0; index < 5; index++){
+    log1a[index] -- ;
+    log1a[index] -- ;
+    if (log1a[index] < -35){
+      log1a[index] = 140;
+    }
   }
-  moveSnake();
-  for (byte snakeBody = 0; snakeBody < snakeLength; snakeBody++){
-    arduboy.fillRect(snakex[snakeBody]-1, snakey[snakeBody]-1, 3, 3, 1);
+  for (int index = 0; index < 4; index++){
+    log2a[index] ++ ;
+    if (log2a[index] > 140){
+      log2a[index] = -48;
+    }
   }
+  for (int index = 0; index < 3; index++){
+    log3a[index] ++ ;
+    log3a[index] ++ ;
+    log3a[index] ++ ;
+    if (log3a[index] > 140){
+      log3a[index] = -70;
+    }
+  }
+  for (int index = 0; index < 4; index++){
+    log4a[index] -- ;
+    log4a[index] -- ;
+    if (log4a[index] < -35){
+      log4a[index] = 140;
+    }
+  }
+  for (int index = 0; index < 4; index++){
+    log5a[index] ++ ;
+    log5a[index] ++ ;
+    if (log5a[index] > 165){
+      log5a[index] = -55;
+    }
+  }
+
 }
 
-void drawGameOver()
+void drawFrogger()
 {
-  arduboy.fillRect(xa-1, ya-1, 3, 3, 0);
-  for (byte snakeBody = 0; snakeBody < snakeLength; snakeBody++){
-    arduboy.fillRect(snakex[snakeBody]-1, snakey[snakeBody]-1, 3, 3, 0);
-  }
-  arduboy.drawRect(0, 0, 128, 64, 1);
-  arduboy.drawRect(0, 1, 128, 62, 1);
-  arduboy.setCursor(37, 22);
-  arduboy.print("Game Over");
-  arduboy.setCursor(31, 36);
-  arduboy.print("Score: ");
-  arduboy.print(score);
-  arduboy.display();
-  arduboy.delayShort(3000);
+ // Remove Frogger
+ arduboy.fillRect(fx-3, fy-3, 7, 7, 0);
+ delay(10);
+ // Draw logs and Frogger
+ drawLogs();
+ delay(10);
+ moveFrogger();
+ delay(10);
+ // Draw Frogger
+ Serial.print(fx);
+ Serial.print(fy);
+// arduboy.fillRect(fx-3, fy-3, 7, 7, 0);
+ arduboy.fillRect(fx-3, fy, 7, 2, 1);
+ arduboy.fillRect(fx-1, fy-2, 3, 4, 1);
+ arduboy.fillRect(fx-2, fy+2, 2, 1, 1);
+ arduboy.fillRect(fx+1, fy+2, 2, 1, 1);
+ arduboy.fillRect(fx-2, fy-3, 2, 1, 1);
+ arduboy.fillRect(fx+1, fy-3, 2, 1, 1);
+ arduboy.drawPixel(fx-1, fy+3, 1);
+ arduboy.drawPixel(fx+1, fy+3, 1);
 }
+
+// void drawGameOver()
+// {
+//   arduboy.fillRect(xa-1, ya-1, 3, 3, 0);
+//   for (byte snakeBody = 0; snakeBody < snakeLength; snakeBody++){
+//     arduboy.fillRect(snakex[snakeBody]-1, snakey[snakeBody]-1, 3, 3, 0);
+//   }
+//   arduboy.drawRect(0, 0, 128, 64, 1);
+//   arduboy.drawRect(0, 1, 128, 62, 1);
+//   arduboy.setCursor(37, 22);
+//   arduboy.print("Game Over");
+//   arduboy.setCursor(31, 36);
+//   arduboy.print("Score: ");
+//   arduboy.print(score);
+//   arduboy.display();
+//   arduboy.delayShort(3000);
+// }
 
 void pause()
 {
@@ -414,9 +501,9 @@ boolean titleScreen()
 {
   //Clears the screen
   arduboy.clear();
-  arduboy.setCursor(34,12);
+  arduboy.setCursor(22,12);
   arduboy.setTextSize(2);
-  arduboy.print("SNAKE");
+  arduboy.print("FROGGER");
   arduboy.setTextSize(1);
   arduboy.display();
   if (pollFireButton(25))
