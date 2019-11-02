@@ -580,7 +580,7 @@ void pause()
 //Used to delay images while reading button input
 boolean pollFireButton(int n)
 {
-  for(int i = 0; i < n; i++)
+  for(int i = 0; i < n; i++)  
   {
     arduboy.delayShort(15);
     pad = arduboy.pressed(A_BUTTON) || arduboy.pressed(B_BUTTON);
